@@ -7,8 +7,10 @@ import torch
 
 if __name__ == '__main__':
     args = TrainOptionsForTest().initialize()
-    testloader = data.DataLoader(CSDataTestSet(args.data_dir, './dataset/list/cityscapes/test.lst', crop_size=(1024, 2048)), 
-                                    batch_size=1, shuffle=False, pin_memory=True)
-    student = Res_pspnet(BasicBlock, [2, 2, 2, 2], num_classes = 19)
+    testloader = data.DataLoader(
+        CSDataTestSet(args.data_dir, './dataset/list/cityscapes/test.lst', crop_size=(1024, 2048)),
+        batch_size=1, shuffle=False, pin_memory=True
+    )
+    student = Res_pspnet(BasicBlock, [2, 2, 2, 2], num_classes=19)  # resnet
     student.load_state_dict(torch.load(args.resume_from))
-    evaluate_main(student, testloader, '0', '512,512', 19, True, type = 'test')
+    evaluate_main(student, testloader, '512,512', 19, True, type='test')

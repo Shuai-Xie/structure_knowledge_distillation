@@ -20,7 +20,7 @@ class VOCDataSet(data.Dataset):
         self.is_mirror = mirror
         # self.mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
         self.img_ids = [i_id.strip() for i_id in open(list_path)]
-        if not max_iters==None:
+        if not max_iters == None:
             self.img_ids = self.img_ids * int(np.ceil(float(max_iters) / len(self.img_ids)))
         self.files = []
         # for split in ["train", "trainval", "val"]:
@@ -38,8 +38,8 @@ class VOCDataSet(data.Dataset):
 
     def generate_scale_label(self, image, label):
         f_scale = 0.5 + random.randint(0, 11) / 10.0
-        image = cv2.resize(image, None, fx=f_scale, fy=f_scale, interpolation = cv2.INTER_LINEAR)
-        label = cv2.resize(label, None, fx=f_scale, fy=f_scale, interpolation = cv2.INTER_NEAREST)
+        image = cv2.resize(image, None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_LINEAR)
+        label = cv2.resize(label, None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
         return image, label
 
     def __getitem__(self, index):
@@ -56,12 +56,12 @@ class VOCDataSet(data.Dataset):
         pad_h = max(self.crop_h - img_h, 0)
         pad_w = max(self.crop_w - img_w, 0)
         if pad_h > 0 or pad_w > 0:
-            img_pad = cv2.copyMakeBorder(image, 0, pad_h, 0, 
-                pad_w, cv2.BORDER_CONSTANT, 
-                value=(0.0, 0.0, 0.0))
-            label_pad = cv2.copyMakeBorder(label, 0, pad_h, 0, 
-                pad_w, cv2.BORDER_CONSTANT,
-                value=(self.ignore_label,))
+            img_pad = cv2.copyMakeBorder(image, 0, pad_h, 0,
+                                         pad_w, cv2.BORDER_CONSTANT,
+                                         value=(0.0, 0.0, 0.0))
+            label_pad = cv2.copyMakeBorder(label, 0, pad_h, 0,
+                                           pad_w, cv2.BORDER_CONSTANT,
+                                           value=(self.ignore_label,))
         else:
             img_pad, label_pad = image, label
 
@@ -69,9 +69,9 @@ class VOCDataSet(data.Dataset):
         h_off = random.randint(0, img_h - self.crop_h)
         w_off = random.randint(0, img_w - self.crop_w)
         # roi = cv2.Rect(w_off, h_off, self.crop_w, self.crop_h);
-        image = np.asarray(img_pad[h_off : h_off+self.crop_h, w_off : w_off+self.crop_w], np.float32)
-        label = np.asarray(label_pad[h_off : h_off+self.crop_h, w_off : w_off+self.crop_w], np.float32)
-        #image = image[:, :, ::-1]  # change to BGR
+        image = np.asarray(img_pad[h_off: h_off + self.crop_h, w_off: w_off + self.crop_w], np.float32)
+        label = np.asarray(label_pad[h_off: h_off + self.crop_h, w_off: w_off + self.crop_w], np.float32)
+        # image = image[:, :, ::-1]  # change to BGR
         image = image.transpose((2, 0, 1))
         if self.is_mirror:
             flip = np.random.choice(2) * 2 - 1
@@ -89,7 +89,7 @@ class VOCDataTestSet(data.Dataset):
         self.mean = mean
         # self.mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
         self.img_ids = [i_id.strip() for i_id in open(list_path)]
-        self.files = [] 
+        self.files = []
         # for split in ["train", "trainval", "val"]:
         for name in self.img_ids:
             img_file = osp.join(self.root, "JPEGImages/%s.jpg" % name)
@@ -107,16 +107,17 @@ class VOCDataTestSet(data.Dataset):
         name = osp.splitext(osp.basename(datafiles["img"]))[0]
         image = np.asarray(image, np.float32)
         image -= self.mean
-        
+
         img_h, img_w, _ = image.shape
         pad_h = max(self.crop_h - img_h, 0)
         pad_w = max(self.crop_w - img_w, 0)
         if pad_h > 0 or pad_w > 0:
-            image = cv2.copyMakeBorder(image, 0, pad_h, 0, 
-                pad_w, cv2.BORDER_CONSTANT, 
-                value=(0.0, 0.0, 0.0))
+            image = cv2.copyMakeBorder(image, 0, pad_h, 0,
+                                       pad_w, cv2.BORDER_CONSTANT,
+                                       value=(0.0, 0.0, 0.0))
         image = image.transpose((2, 0, 1))
         return image, name, size
+
 
 class CSDataSet(data.Dataset):
     def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321), mean=(128, 128, 128), scale=True, mirror=True, ignore_label=255):
@@ -129,8 +130,8 @@ class CSDataSet(data.Dataset):
         self.is_mirror = mirror
         # self.mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
         self.img_ids = [i_id.strip().split() for i_id in open(list_path)]
-        if not max_iters==None:
-                self.img_ids = self.img_ids * int(np.ceil(float(max_iters) / len(self.img_ids)))
+        if not max_iters == None:
+            self.img_ids = self.img_ids * int(np.ceil(float(max_iters) / len(self.img_ids)))
         self.files = []
         # for split in ["train", "trainval", "val"]:
         for item in self.img_ids:
@@ -156,8 +157,8 @@ class CSDataSet(data.Dataset):
 
     def generate_scale_label(self, image, label):
         f_scale = 0.7 + random.randint(0, 14) / 10.0
-        image = cv2.resize(image, None, fx=f_scale, fy=f_scale, interpolation = cv2.INTER_LINEAR)
-        label = cv2.resize(label, None, fx=f_scale, fy=f_scale, interpolation = cv2.INTER_NEAREST)
+        image = cv2.resize(image, None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_LINEAR)
+        label = cv2.resize(label, None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
         return image, label
 
     def id2trainId(self, label, reverse=False):
@@ -185,12 +186,12 @@ class CSDataSet(data.Dataset):
         pad_h = max(self.crop_h - img_h, 0)
         pad_w = max(self.crop_w - img_w, 0)
         if pad_h > 0 or pad_w > 0:
-            img_pad = cv2.copyMakeBorder(image, 0, pad_h, 0, 
-                pad_w, cv2.BORDER_CONSTANT, 
-                value=(0.0, 0.0, 0.0))
-            label_pad = cv2.copyMakeBorder(label, 0, pad_h, 0, 
-                pad_w, cv2.BORDER_CONSTANT,
-                value=(self.ignore_label,))
+            img_pad = cv2.copyMakeBorder(image, 0, pad_h, 0,
+                                         pad_w, cv2.BORDER_CONSTANT,
+                                         value=(0.0, 0.0, 0.0))
+            label_pad = cv2.copyMakeBorder(label, 0, pad_h, 0,
+                                           pad_w, cv2.BORDER_CONSTANT,
+                                           value=(self.ignore_label,))
         else:
             img_pad, label_pad = image, label
 
@@ -198,9 +199,9 @@ class CSDataSet(data.Dataset):
         h_off = random.randint(0, img_h - self.crop_h)
         w_off = random.randint(0, img_w - self.crop_w)
         # roi = cv2.Rect(w_off, h_off, self.crop_w, self.crop_h);
-        image = np.asarray(img_pad[h_off : h_off+self.crop_h, w_off : w_off+self.crop_w], np.float32)
-        label = np.asarray(label_pad[h_off : h_off+self.crop_h, w_off : w_off+self.crop_w], np.float32)
-        #image = image[:, :, ::-1]  # change to BGR
+        image = np.asarray(img_pad[h_off: h_off + self.crop_h, w_off: w_off + self.crop_w], np.float32)
+        label = np.asarray(label_pad[h_off: h_off + self.crop_h, w_off: w_off + self.crop_w], np.float32)
+        # image = image[:, :, ::-1]  # change to BGR
         image = image.transpose((2, 0, 1))
         if self.is_mirror:
             flip = np.random.choice(2) * 2 - 1
@@ -208,6 +209,7 @@ class CSDataSet(data.Dataset):
             label = label[:, ::flip]
 
         return image.copy(), label.copy(), np.array(size), name
+
 
 class CSDataTestSet(data.Dataset):
     def __init__(self, root, list_path, crop_size=(505, 505), mean=(128, 128, 128)):
@@ -217,10 +219,9 @@ class CSDataTestSet(data.Dataset):
         self.mean = (104.00698793, 116.66876762, 122.67891434)
         # self.mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
         self.img_ids = [i_id.strip().split() for i_id in open(list_path)]
-        self.files = [] 
+        self.files = []
         # for split in ["train", "trainval", "val"]:
         for item in self.img_ids:
-            
             image_path = item[0]
             name = osp.splitext(osp.basename(image_path))[0]
             img_file = osp.join(self.root, image_path)
@@ -238,14 +239,13 @@ class CSDataTestSet(data.Dataset):
         name = osp.splitext(osp.basename(datafiles["img"]))[0]
         image = np.asarray(image, np.float32)
         image -= self.mean
-        
+
         img_h, img_w, _ = image.shape
         pad_h = max(self.crop_h - img_h, 0)
         pad_w = max(self.crop_w - img_w, 0)
         if pad_h > 0 or pad_w > 0:
-            image = cv2.copyMakeBorder(image, 0, pad_h, 0, 
-                pad_w, cv2.BORDER_CONSTANT, 
-                value=(0.0, 0.0, 0.0))
+            image = cv2.copyMakeBorder(image, 0, pad_h, 0,
+                                       pad_w, cv2.BORDER_CONSTANT,
+                                       value=(0.0, 0.0, 0.0))
         image = image.transpose((2, 0, 1))
         return image, size, name
-

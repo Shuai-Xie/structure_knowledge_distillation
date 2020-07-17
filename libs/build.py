@@ -1,5 +1,6 @@
 import os
 
+# pytorch 0.4.1, higher version not support
 from torch.utils.ffi import create_extension
 
 sources = ['src/lib_cffi.cpp']
