@@ -1,6 +1,4 @@
-import os
 import argparse
-import torch
 
 DATASET = "cityscapes_light"
 DATA_DIRECTORY = '/fast/users/a1760953/AIEdgeContest/cityscapes/'
@@ -33,7 +31,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-class Parameters():
+class Parameters:
     def __init__(self):
         parser = argparse.ArgumentParser(description="Pytorch Segmentation Network")
         parser.add_argument("--dataset", type=str, default=DATASET,
@@ -231,6 +229,6 @@ class Parameters():
                             help="Number of the initial staring epochs.")
         self.parser = parser
 
-    def parse(self):
-        args = self.parser.parse_args()
+    def parse(self, paramms=None):
+        args = self.parser.parse_args(paramms)
         return args

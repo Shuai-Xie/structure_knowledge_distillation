@@ -141,32 +141,38 @@ def id2trainId(label, id_to_trainid, reverse=False):
 
 def main():
     """Create the model and start the evaluation process."""
-    args = Parameters().parse()
-    # #
-    # args.method = 'student_res18_pre'
-    args.method = 'student_esp_d'
-    args.dataset = 'camvid_light'
-    args.data_list = "/ssd/yifan/SegNet/CamVid/test.txt"
-    args.data_dir = "/ssd/yifan/"
-    args.num_classes = 11
+
+    ## Camvid test
+    params = [
+        '--gpu', '0',
+        '--method', 'student_esp_d',  # esp decoder, student model
+        '--dataset', 'camvid_light',  # 11 class, 360*480
+        '--data-list', '/datasets/segment_dataset/CamVid11/test.txt',  # PATH_OF_THE_TEST_LIST
+        '--data-dir', '/datasets/segment_dataset/CamVid11',  # PATH_OF_THE_TEST_DATA
+        '--num-classes', '11',
+        '--restore-from', './checkpoint/Camvid/ESP/kd_59.8.pth',  # model path
+        '--store-output', 'False'  # whether store the predicted segmentation map
+    ]
+    args = Parameters().parse(params)
+    args.batch_size = 1
+
     # args.method='psp_dsn_floor'
-    args.restore_from = "./checkpoint/Camvid/ESP/base_57.8.pth"
+    # args.restore_from = "./checkpoint/Camvid/ESP/base_57.8.pth"
     # args.restore_from="/teamscratch/msravcshare/v-yifan/ESPNet/train/0.4results_enc_01_enc_2_8/model_298.pth"
     # args.restore_from = "/teamscratch/msravcshare/v-yifacd n/sd_pytorch0.5/checkpoint/snapshots_psp_dsn_floor_1e-2_40000_TEACHER864/CS_scenes_40000.pth"
     # args.restore_from = "/teamscratch/msravcshare/v-yifan/sd_pytorch0.5/checkpoint/snapshots_psp_dsn_floor_1e-2_40000_TEACHER5121024_esp/CS_scenes_40000.pth"
     # args.data_list = '/teamscratch/msravcshare/v-yifan/deeplab_v3/dataset/list/cityscapes/train.lst'
-    args.batch_size = 1
+
     print("Input arguments:")
-    for key, val in vars(args).items():
-        print("{:16} {}".format(key, val))
+    from pprint import pprint
+    pprint(vars(args))
 
-    h, w = map(int, args.input_size.split(','))
-    input_size = (h, w)
+    h, w = map(int, args.input_size.split(','))  # default '512,512'
 
-    print(args)
-    output_path = args.output_path
+    output_path = args.output_path  # ./seg_output_eval_set
     if not os.path.exists(output_path):
         os.makedirs(output_path)
+
     # args.method='psp_dsn'
     deeplab = get_segmentation_model(args.method, num_classes=args.num_classes)
 
@@ -197,11 +203,13 @@ def main():
     model = deeplab
     model.eval()
     model.cuda()
-    # args.dataset='cityscapes_light'
+
     testloader = data.DataLoader(get_segmentation_dataset(args.dataset, root=args.data_dir, list_path=args.data_list,
                                                           crop_size=(360, 480), mean=IMG_MEAN, scale=False,
                                                           mirror=False),
-                                 batch_size=args.batch_size, shuffle=False, pin_memory=True)
+                                 batch_size=args.batch_size,
+                                 shuffle=False,
+                                 pin_memory=True)
 
     data_list = []
     confusion_matrix = np.zeros((args.num_classes, args.num_classes))
@@ -230,7 +238,7 @@ def main():
 
         for i in range(image.size(0)):
             image_id += 1
-            print('%d th segmentation map generated ...' % (image_id))
+            print('\r%d th segmentation map generated ...' % (image_id), end='')
             args.store_output = 'True'
             output_path = './esp_camvid_base/'
             if not os.path.exists(output_path):

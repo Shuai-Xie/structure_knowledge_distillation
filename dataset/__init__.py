@@ -1,15 +1,17 @@
-from .cityscapes import CitySegmentationDense,CitySegmentationLight,CitySegmentationSD,CitySegmentationLightesp,CitySegmentationesp,CitySegmentationunlabelesp,CamVidLight
-from .Cityscapes_test import CitySegmentationLight_test,CitySegmentationesp_test
+from .cityscapes import CitySegmentationDense, CitySegmentationLight, CitySegmentationSD, CitySegmentationLightesp, CitySegmentationesp, \
+    CitySegmentationunlabelesp, CamVidLight
+from .Cityscapes_test import CitySegmentationLight_test, CitySegmentationesp_test
+
 datasets = {
     'cityscapes_dense': CitySegmentationDense,
     'cityscapes_light': CitySegmentationLight,
     'cityscapes_light_test': CitySegmentationLight_test,
     'cityscapes_sd': CitySegmentationSD,
-    'cityscapes_esp':CitySegmentationesp,
+    'cityscapes_esp': CitySegmentationesp,
     'cityscapes_esp_test': CitySegmentationesp_test,
     'cityscapes_esp_sd': CitySegmentationLightesp,
-    'cityscapes_esp_unlabel':CitySegmentationunlabelesp,
-    'camvid_light':CamVidLight
+    'cityscapes_esp_unlabel': CitySegmentationunlabelesp,
+    'camvid_light': CamVidLight
 
 }
 

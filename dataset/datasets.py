@@ -9,6 +9,7 @@ import torchvision
 import cv2
 from torch.utils import data
 
+
 class CitySegmentationCrop(data.Dataset):
     def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321),
                  mean=(128, 128, 128), scale=True, mirror=True, ignore_label=255, use_aug=False, extra_aug=False):
@@ -152,16 +153,14 @@ class CitySegmentationCrop(data.Dataset):
         if self.scale:
             image, label = self.generate_scale_label(image, label)
         image = np.asarray(image, np.float32)
-        #mean = (72.41519599,82.93553322,73.18188461)
+        # mean = (72.41519599,82.93553322,73.18188461)
         image = image[:, :, ::-1]
         from torchvision import transforms
         data_transforms = transforms.Compose([transforms.ToTensor(),
                                               transforms.Normalize([0.290101, 0.328081, 0.286964],
                                                                    [0.182954, 0.186566, 0.184475])])
 
-        #image-= mean
-
-
+        # image-= mean
 
         img_h, img_w = label.shape
         pad_h = max(self.crop_h - img_h, 0)
@@ -182,8 +181,8 @@ class CitySegmentationCrop(data.Dataset):
         # roi = cv2.Rect(w_off, h_off, self.crop_w, self.crop_h);
         image = np.asarray(img_pad[h_off: h_off + self.crop_h, w_off: w_off + self.crop_w], np.float32)
         label = np.asarray(label_pad[h_off: h_off + self.crop_h, w_off: w_off + self.crop_w], np.float32)
-        #image = image[:, :, ::-1]  # change to BGR
-        #image = image.transpose((2, 0, 1))
+        # image = image[:, :, ::-1]  # change to BGR
+        # image = image.transpose((2, 0, 1))
         if self.is_mirror:
             flip = np.random.choice(2) * 2 - 1
             image = image[:, :, ::flip]
@@ -202,7 +201,6 @@ class CitySegmentationCrop(data.Dataset):
         image = data_transforms(image)
 
         return image, label.copy(), np.array(size), name
-
 
 
 class CityscapesLoader(data.Dataset):
@@ -455,7 +453,6 @@ class CityscapesLoader(data.Dataset):
         # image_s-=s_mean
         # image_s/=s_std
 
-
         # change to BGR
         image_s = image_s.transpose((2, 0, 1))
         image_t = image_t.transpose((2, 0, 1))
@@ -466,6 +463,7 @@ class CityscapesLoader(data.Dataset):
             label = label[:, ::flip]
 
         return image_t.copy(), image_s.copy(), label.copy(), np.array(size), name
+
 
 class CitySegmentationTrain(data.Dataset):
     def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321),
@@ -715,6 +713,7 @@ class CitySegmentationTest(data.Dataset):
         image = np.asarray(img_pad[h_off: h_off + self.crop_h, w_off: w_off + self.crop_w], np.float32)
         image = image.transpose((2, 0, 1))
         return image.copy(), np.array(size), name
+
 
 if __name__ == '__main__':
     dst = CSDataSet("./cityscapes/", "./list/cityscapes/val.lst", crop_size=(1024, 2048))

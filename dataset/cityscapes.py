@@ -1751,16 +1751,18 @@ class CamVidLight(data.Dataset):
         self.use_aug = use_aug
         self.extra_aug = extra_aug
         # self.mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
-        self.img_ids = [i_id.strip().split() for i_id in open(list_path)]
+
+        # [ [image_path, label_path], ... ]
+        self.img_ids = [i_id.strip().split() for i_id in open(list_path)]  # test.txt
         if not max_iters == None:
             self.img_ids = self.img_ids * int(np.ceil(float(max_iters) / len(self.img_ids)))
         self.files = []
-        # for split in ["train", "trainval", "val"]:
+
         for item in self.img_ids:
             image_path, label_path = item
-            name = osp.splitext(osp.basename(label_path))[0]
-            img_file = osp.join(self.root, image_path[1:])
-            label_file = osp.join(self.root, label_path[1:])
+            name = osp.splitext(osp.basename(label_path))[0]  # img name
+            img_file = osp.join(self.root, image_path.replace('/SegNet/CamVid/', ''))  # 必须将 path 首部的 / 去掉
+            label_file = osp.join(self.root, label_path.replace('/SegNet/CamVid/', ''))
             self.files.append({
                 "img": img_file,
                 "label": label_file,

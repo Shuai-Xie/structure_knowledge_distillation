@@ -9,10 +9,11 @@ networks = {
     'student_res18': get_psp_resnet18,
     'student_res18_pre': get_psp_resnet18_pre,
     'teacher_dense': get_teacher_dense,
-    'student_esp_e': get_ESPnet_encoder,
-    'student_esp_d': get_ESPnet_decoder,
+    'student_esp_e': get_ESPnet_encoder,  # ESP only encoder
+    'student_esp_d': get_ESPnet_decoder,  # ESP with decoder
 }
 
+
 #
-def get_segmentation_model(name, **kwargs):
+def get_segmentation_model(name, **kwargs):  # 双 * kwargs 用处
     return networks[name.lower()](**kwargs)
