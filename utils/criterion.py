@@ -8,6 +8,7 @@ from torch.autograd import Variable
 import scipy.ndimage as nd
 from utils.utils import sim_dis_compute
 
+
 class OhemCrossEntropy2d(nn.Module):
     def __init__(self, ignore_label=255, thresh=0.7, min_kept=100000, factor=8):
         super(OhemCrossEntropy2d, self).__init__()
@@ -20,11 +21,11 @@ class OhemCrossEntropy2d(nn.Module):
     def find_threshold(self, np_predict, np_target):
         # downsample 1/8
         factor = self.factor
-        predict = nd.zoom(np_predict, (1.0, 1.0, 1.0/factor, 1.0/factor), order=1)
-        target = nd.zoom(np_target, (1.0, 1.0/factor, 1.0/factor), order=0)
+        predict = nd.zoom(np_predict, (1.0, 1.0, 1.0 / factor, 1.0 / factor), order=1)
+        target = nd.zoom(np_target, (1.0, 1.0 / factor, 1.0 / factor), order=0)
 
         n, c, h, w = predict.shape
-        min_kept = self.min_kept // (factor*factor) #int(self.min_kept_ratio * n * h * w)
+        min_kept = self.min_kept // (factor * factor)  # int(self.min_kept_ratio * n * h * w)
 
         input_label = target.ravel().astype(np.int32)
         input_prob = np.rollaxis(predict, 1).reshape((c, -1))
@@ -36,11 +37,11 @@ class OhemCrossEntropy2d(nn.Module):
         if min_kept >= num_valid:
             threshold = 1.0
         elif num_valid > 0:
-            prob = input_prob[:,valid_flag]
+            prob = input_prob[:, valid_flag]
             pred = prob[label, np.arange(len(label), dtype=np.int32)]
             threshold = self.thresh
             if min_kept > 0:
-                k_th = min(len(pred), min_kept)-1
+                k_th = min(len(pred), min_kept) - 1
                 new_array = np.partition(pred, k_th)
                 new_threshold = new_array[k_th]
                 if new_threshold > self.thresh:
@@ -63,7 +64,7 @@ class OhemCrossEntropy2d(nn.Module):
         num_valid = valid_flag.sum()
 
         if num_valid > 0:
-            prob = input_prob[:,valid_flag]
+            prob = input_prob[:, valid_flag]
             pred = prob[label, np.arange(len(label), dtype=np.int32)]
             kept_flag = pred <= threshold
             valid_inds = valid_inds[kept_flag]
@@ -89,6 +90,7 @@ class OhemCrossEntropy2d(nn.Module):
         target = self.generate_new_target(input_prob, target)
         return self.criterion(predict, target)
 
+
 class CriterionAdditionalGP(nn.Module):
     def __init__(self, D_net, lambda_gp):
         super(CriterionAdditionalGP, self).__init__()
@@ -96,7 +98,7 @@ class CriterionAdditionalGP(nn.Module):
         self.lambda_gp = lambda_gp
 
     def forward(self, d_in_S, d_in_T):
-        assert d_in_S[0].shape == d_in_T[0].shape,'the output dim of D with teacher and student as input differ'
+        assert d_in_S[0].shape == d_in_T[0].shape, 'the output dim of D with teacher and student as input differ'
 
         real_images = d_in_T[0]
         fake_images = d_in_S[0]
@@ -105,11 +107,11 @@ class CriterionAdditionalGP(nn.Module):
         interpolated = Variable(alpha * real_images.data + (1 - alpha) * fake_images.data, requires_grad=True)
         out = self.D(interpolated)
         grad = torch.autograd.grad(outputs=out[0],
-                                    inputs=interpolated,
-                                    grad_outputs=torch.ones(out[0].size()).cuda(),
-                                    retain_graph=True,
-                                    create_graph=True,
-                                    only_inputs=True)[0]
+                                   inputs=interpolated,
+                                   grad_outputs=torch.ones(out[0].size()).cuda(),
+                                   retain_graph=True,
+                                   create_graph=True,
+                                   only_inputs=True)[0]
 
         grad = grad.view(grad.size(0), -1)
         grad_l2norm = torch.sqrt(torch.sum(grad ** 2, dim=1))
@@ -118,6 +120,7 @@ class CriterionAdditionalGP(nn.Module):
         # Backward + Optimize
         d_loss = self.lambda_gp * d_loss_gp
         return d_loss
+
 
 class CriterionAdvForG(nn.Module):
     def __init__(self, adv_type):
@@ -136,6 +139,7 @@ class CriterionAdvForG(nn.Module):
             raise ValueError('args.adv_loss should be wgan-gp or hinge')
         return g_loss_fake
 
+
 class CriterionAdv(nn.Module):
     def __init__(self, adv_type):
         super(CriterionAdv, self).__init__()
@@ -144,7 +148,7 @@ class CriterionAdv(nn.Module):
         self.adv_loss = adv_type
 
     def forward(self, d_out_S, d_out_T):
-        assert d_out_S[0].shape == d_out_T[0].shape,'the output dim of D with teacher and student as input differ'
+        assert d_out_S[0].shape == d_out_T[0].shape, 'the output dim of D with teacher and student as input differ'
         '''teacher output'''
         d_out_real = d_out_T[0]
         if self.adv_loss == 'wgan-gp':
@@ -165,10 +169,12 @@ class CriterionAdv(nn.Module):
             raise ValueError('args.adv_loss should be wgan-gp or hinge')
         return d_loss_real + d_loss_fake
 
+
 class CriterionDSN(nn.Module):
     '''
     DSN : We need to consider two supervision for the model.
     '''
+
     def __init__(self, ignore_index=255, use_weight=True, reduce=True):
         super(CriterionDSN, self).__init__()
         self.ignore_index = ignore_index
@@ -179,18 +185,21 @@ class CriterionDSN(nn.Module):
     def forward(self, preds, target):
         h, w = target.size(1), target.size(2)
 
+        # 上采样到 target size，计算 loss
         scale_pred = F.upsample(input=preds[0], size=(h, w), mode='bilinear', align_corners=True)
         loss1 = self.criterion(scale_pred, target)
 
         scale_pred = F.upsample(input=preds[1], size=(h, w), mode='bilinear', align_corners=True)
         loss2 = self.criterion(scale_pred, target)
 
-        return loss1 + loss2*0.4
+        return loss1 + loss2 * 0.4
+
 
 class CriterionOhemDSN(nn.Module):
     '''
     DSN : We need to consider two supervision for the model.
     '''
+
     def __init__(self, ignore_index=255, thresh=0.7, min_kept=100000, use_weight=True, reduce=True):
         super(CriterionOhemDSN, self).__init__()
         self.ignore_index = ignore_index
@@ -206,7 +215,8 @@ class CriterionOhemDSN(nn.Module):
         scale_pred = F.upsample(input=preds[1], size=(h, w), mode='bilinear', align_corners=True)
         loss2 = self.criterion2(scale_pred, target)
 
-        return loss1 + loss2*0.4
+        return loss1 + loss2 * 0.4
+
 
 class CriterionPixelWise(nn.Module):
     def __init__(self, ignore_index=255, use_weight=True, reduce=True):
@@ -216,20 +226,39 @@ class CriterionPixelWise(nn.Module):
         if not reduce:
             print("disabled the reduce.")
 
+    def flatten(self, pred, C):  # BCHW -> B*H*W, C
+        return pred.permute(0, 2, 3, 1).contiguous().view(-1, C)
+
     def forward(self, preds_S, preds_T):
-        preds_T[0].detach()
-        assert preds_S[0].shape == preds_T[0].shape,'the output dim of teacher and student differ'
-        N,C,W,H = preds_S[0].shape
-        softmax_pred_T = F.softmax(preds_T[0].permute(0,2,3,1).contiguous().view(-1,C), dim=1)
-        logsoftmax = nn.LogSoftmax(dim=1)
-        loss = (torch.sum( - softmax_pred_T * logsoftmax(preds_S[0].permute(0,2,3,1).contiguous().view(-1,C))))/W/H
+        """
+
+        """
+        preds_T[0].detach()  # teacher 模型 infer 结果, detach()
+        assert preds_S[0].shape == preds_T[0].shape, 'the output dim of teacher and student differ'
+        N, C, W, H = preds_S[0].shape
+
+        # flatten, C 挪到最后
+        softmax_pred_T = F.softmax(self.flatten(preds_T[0], C), dim=1)  # teacher dist, 认为是真实分布 p
+        logsoftmax = nn.LogSoftmax(dim=1)  # Log(Softmax(x))
+
+        # KL divergence = - p(x) * log( q(x) / p(x) ) 等价于优化 - p(x) log(q(x))
+        # teacher 的 p 分布确定，则 KL(p||q) = H(p,q) - H(p)
+        # 与 CE loss 不同在于与：这里的 p 分布不是 one-hot，而是 soft label
+        loss = torch.sum(- softmax_pred_T * logsoftmax(self.flatten(preds_S[0], C)))
+        loss = loss / W / H  # todo: / B ?
+
         return loss
+
 
 class CriterionPairWiseforWholeFeatAfterPool(nn.Module):
     def __init__(self, scale, feat_ind):
-        '''inter pair-wise loss from inter feature maps'''
+        """
+        inter pair-wise loss from inter feature maps
+        scale: pool_scale = 0.5
+        feat_ind: -5，x_feat_after_psp, 计算 loss 的 feature 位置
+        """
         super(CriterionPairWiseforWholeFeatAfterPool, self).__init__()
-        self.criterion = sim_dis_compute
+        self.criterion = sim_dis_compute  # cos similarity distance
         self.feat_ind = feat_ind
         self.scale = scale
 
@@ -239,7 +268,7 @@ class CriterionPairWiseforWholeFeatAfterPool(nn.Module):
         feat_T.detach()
 
         total_w, total_h = feat_T.shape[2], feat_T.shape[3]
-        patch_w, patch_h = int(total_w*self.scale), int(total_h*self.scale)
-        maxpool = nn.MaxPool2d(kernel_size=(patch_w, patch_h), stride=(patch_w, patch_h), padding=0, ceil_mode=True) # change
+        patch_w, patch_h = int(total_w * self.scale), int(total_h * self.scale)
+        maxpool = nn.MaxPool2d(kernel_size=(patch_w, patch_h), stride=(patch_w, patch_h), padding=0, ceil_mode=True)  # change
         loss = self.criterion(maxpool(feat_S), maxpool(feat_T))
         return loss

@@ -1,9 +1,6 @@
 import argparse
-import torch
-import time
-import logging
-import os
 from utils.utils import *
+
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -13,20 +10,22 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-class TrainOptions():
+
+class TrainOptions:
     def initialize(self):
         parser = argparse.ArgumentParser(description='knowledge-distillation')
-        parser.add_argument('--data_set', default='cityscape',type=str, metavar='', help='')
+        parser.add_argument('--data_set', default='cityscape', type=str, metavar='', help='')
 
-        parser.add_argument('--classes_num', default=19, type=int,metavar='N', help='class num of the dataset')
-        parser.add_argument('--T_ckpt_path', default='./ckpt/Teacher/CS_scenes_38413_0.7832174615268139.pth',type=str, metavar='teacher ckpt path', help='teacher ckpt path')
+        parser.add_argument('--classes_num', default=19, type=int, metavar='N', help='class num of the dataset')
+        parser.add_argument('--T_ckpt_path', default='./ckpt/Teacher/CS_scenes_38413_0.7832174615268139.pth', type=str, metavar='teacher ckpt path',
+                            help='teacher ckpt path')
         parser.add_argument('--S_resume', default='True', type=str2bool, metavar='is or not use student', help='is or not use student ckpt')
-        parser.add_argument('--S_ckpt_path', default='./dataset/resnet18-imagenet.pth',type=str, metavar='student ckpt path', help='student ckpt path')
-        parser.add_argument('--D_resume', default=True, type=bool,metavar='is or not use discriminator', help='is or not use discriminator ckpt')
-        parser.add_argument('--D_ckpt_path', default='',type=str, metavar='discriminator ckpt path', help='discriminator ckpt path')
+        parser.add_argument('--S_ckpt_path', default='./dataset/resnet18-imagenet.pth', type=str, metavar='student ckpt path', help='student ckpt path')
+        parser.add_argument('--D_resume', default=True, type=bool, metavar='is or not use discriminator', help='is or not use discriminator ckpt')
+        parser.add_argument('--D_ckpt_path', default='', type=str, metavar='discriminator ckpt path', help='discriminator ckpt path')
         parser.add_argument("--batch-size", type=int, default=8, help="Number of images sent to the network in one step.")
-        parser.add_argument('--start_epoch', default=0, type=int,metavar='start_epoch', help='start_epoch')
-        parser.add_argument('--epoch_nums', default=1, type=int,metavar='epoch_nums', help='epoch_nums')
+        parser.add_argument('--start_epoch', default=0, type=int, metavar='start_epoch', help='start_epoch')
+        parser.add_argument('--epoch_nums', default=1, type=int, metavar='epoch_nums', help='epoch_nums')
         parser.add_argument('--parallel', default='True', type=str, metavar='parallel', help='attribute of saved name')
         parser.add_argument("--data-dir", type=str, default='', help="Path to the directory containing the PASCAL VOC dataset.")
         parser.add_argument("--data-list", type=str, default='./dataset/list/cityscapes/train.lst', help="Path to the file listing the images in the dataset.")
@@ -65,9 +64,9 @@ class TrainOptions():
         args = parser.parse_args()
 
         args.save_name = 'save_path'
-        args.S_ckpt_path = './ckpt/'+ args.save_name +'/Student'
-        args.D_ckpt_path = './ckpt/' + args.save_name +'/Distriminator'
-        args.D_att_ckpt_path  = './ckpt/' + args.save_name +'/Att_discriminator'
+        args.S_ckpt_path = './ckpt/' + args.save_name + '/Student'
+        args.D_ckpt_path = './ckpt/' + args.save_name + '/Distriminator'
+        args.D_att_ckpt_path = './ckpt/' + args.save_name + '/Att_discriminator'
         args.log_path = './ckpt/log/' + args.save_name
 
         log_init(args.log_path, args.data_set)
@@ -78,17 +77,17 @@ class TrainOptions():
         logger_path = args.log_path + '/tensorboard/'
 
         for key, val in args._get_kwargs():
-            logging.info(key+' : '+str(val))
+            logging.info(key + ' : ' + str(val))
 
         return args
 
 
-class TrainOptionsForTest():
+class TrainOptionsForTest:
     def initialize(self):
         parser = argparse.ArgumentParser(description='knowledge-distillation')
         parser.add_argument("--data-dir", type=str, default='', help="")
         parser.add_argument("--resume-from", type=str, default='', help="")
         args = parser.parse_args()
         for key, val in args._get_kwargs():
-            print(key+' : '+str(val))
+            print(key + ' : ' + str(val))
         return args
